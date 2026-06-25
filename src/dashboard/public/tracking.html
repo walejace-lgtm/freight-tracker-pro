@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Freight Tracker Pro</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --bg-primary: #0a0e1a;
+    --bg-secondary: #111827;
+    --bg-card: rgba(17, 24, 39, 0.8);
+    --bg-glass: rgba(255, 255, 255, 0.03);
+    --border: rgba(255, 255, 255, 0.08);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --accent: #3b82f6;
+    --accent-glow: rgba(59, 130, 246, 0.3);
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --purple: #8b5cf6;
+    --cyan: #06b6d4;
+    --pink: #ec4899;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px; position: relative; z-index: 1; }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding: 20px 28px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    backdrop-filter: blur(20px);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 20px var(--accent-glow);
+  }
+
+  .logo h1 {
+    font-size: 22px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--text-primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+
+  .logo p {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 8px;
+  }
+
+  .nav-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .nav-links a:hover, .nav-links a.active {
+    background: var(--bg-glass);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+  }
+
+  /* Search Section */
+  .search-section {
+    margin-bottom: 28px;
+  }
+
+  .search-box {
+    display: flex;
+    gap: 12px;
+    padding: 20px 24px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    backdrop-filter: blur(20px);
+  }
+
+  .search-input-wrapper {
+    flex: 1;
+    position: relative;
+  }
+
+  .search-input-wrapper svg {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    width: 20px;
+    height: 20px;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 14px 16px 14px 48px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .search-input::placeholder {
+    color: var(--text-muted);
+    text-transform: none;
+    font-family: inherit;
+    letter-spacing: normal;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .btn {
+    padding: 14px 28px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    color: white;
+    box-shadow: 0 4px 20px var(--accent-glow);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 30px var(--accent-glow);
+  }
+
+  .btn-secondary {
+    background: var(--bg-glass);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+  }
+
+  .btn-success {
+    background: linear-gradient(135deg, var(--success), #16a34a);
+    color: white;
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, var(--danger), #dc2626);
+    color: white;
+  }
+
+  /* Stats Bar */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    padding: 20px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    backdrop-filter: blur(20px);
+    text-align: center;
+  }
+
+  .stat-card .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .stat-card .stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .stat-card.blue .stat-value { color: var(--accent); }
+  .stat-card.green .stat-value { color: var(--success); }
+  .stat-card.yellow .stat-value { color: var(--warning); }
+  .stat-card.purple .stat-value { color: var(--purple); }
+
+  /* Main Layout */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 24px;
+    min-height: 600px;
+  }
+
+  /* Map */
+  .map-container {
+    background: var(--bg-glass);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .map-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .map-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .map-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 11px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  #map {
+    height: 520px;
+    background: #0d1117;
+  }
+
+  /* Tracking Panel */
+  .tracking-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .panel-card {
+    background: var(--bg-glass);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    backdrop-filter: blur(20px);
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .panel-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .panel-body {
+    padding: 20px;
+  }
+
+  /* Shipment Info */
+  .shipment-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .info-item {
+    padding: 12px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .info-item .label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .info-item .value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .info-item.full {
+    grid-column: span 2;
+  }
+
+  /* Progress Bar */
+  .progress-section {
+    margin-top: 16px;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .progress-header span {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .progress-header strong {
+    font-size: 14px;
+    color: var(--accent);
+  }
+
+  .progress-track {
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--purple));
+    transition: width 0.5s ease;
+    position: relative;
+  }
+
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Route Steps */
+  .route-steps {
+    position: relative;
+    padding-left: 24px;
+  }
+
+  .route-steps::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--border);
+  }
+
+  .route-step {
+    position: relative;
+    padding: 12px 0;
+  }
+
+  .route-step::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 18px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border);
+    z-index: 1;
+  }
+
+  .route-step.completed::before {
+    background: var(--success);
+    border-color: var(--success);
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+  }
+
+  .route-step.active::before {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 10px var(--accent-glow); }
+    50% { box-shadow: 0 0 20px var(--accent-glow), 0 0 30px var(--accent-glow); }
+  }
+
+  .step-content {
+    padding-left: 8px;
+  }
+
+  .step-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .step-city {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .step-time {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .step-status {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .step-description {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* Shipment List */
+  .shipment-list {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .shipment-list::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .shipment-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .shipment-list::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 2px;
+  }
+
+  .shipment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .shipment-item:hover {
+    background: var(--bg-glass);
+  }
+
+  .shipment-item:last-child {
+    border-bottom: none;
+  }
+
+  .shipment-item .tracking-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .shipment-item .shipment-route {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .shipment-item .status-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Status Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-pu { background: rgba(59, 130, 246, 0.15); color: var(--accent); }
+  .badge-it { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+  .badge-oh { background: rgba(139, 92, 246, 0.15); color: var(--purple); }
+  .badge-dl { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+  .badge-ex { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+  .badge-aw { background: rgba(6, 182, 212, 0.15); color: var(--cyan); }
+  .badge-dp { background: rgba(236, 72, 153, 0.15); color: var(--pink); }
+
+  /* Generate Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.active {
+    display: flex;
+  }
+
+  .modal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    width: 480px;
+    max-width: 90vw;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  }
+
+  .modal h2 {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .modal p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 14px;
+  }
+
+  .form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .modal-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-state svg {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+
+  .empty-state h3 {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .empty-state p {
+    font-size: 13px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 14px 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 2000;
+  }
+
+  .toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .toast.success { border-left: 3px solid var(--success); }
+  .toast.error { border-left: 3px solid var(--danger); }
+  .toast.info { border-left: 3px solid var(--accent); }
+
+  /* Leaflet Custom */
+  .leaflet-container {
+    background: #0d1117 !important;
+    font-family: inherit !important;
+  }
+
+  .custom-marker {
+    background: none;
+    border: none;
+  }
+
+  .marker-dot {
+    width: 16px;
+    height: 16px;
+    background: var(--accent);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 0 20px var(--accent-glow), 0 2px 8px rgba(0,0,0,0.3);
+    animation: markerPulse 2s infinite;
+  }
+
+  .marker-dot.origin {
+    background: var(--success);
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.4), 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .marker-dot.destination {
+    background: var(--danger);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .marker-dot.current {
+    background: var(--accent);
+    animation: markerPulse 1.5s infinite;
+  }
+
+  @keyframes markerPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+  }
+
+  .marker-label {
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-secondary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .route-line {
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-dasharray: 8, 4;
+    animation: dashMove 1s linear infinite;
+  }
+
+  @keyframes dashMove {
+    to { stroke-dashoffset: -12; }
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .main-layout {
+      grid-template-columns: 1fr;
+    }
+    .stats-bar {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .header {
+      flex-direction: column;
+      gap: 16px;
+    }
+    .search-box {
+      flex-direction: column;
+    }
+    .stats-bar {
+      grid-template-columns: 1fr;
+    }
+    .shipment-info {
+      grid-template-columns: 1fr;
+    }
+    .info-item.full {
+      grid-column: span 1;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">&#x1F6A2;</div>
+      <div>
+        <h1>Freight Tracker Pro</h1>
+        <p>Real-time shipment visibility</p>
+      </div>
+    </div>
+    <nav class="nav-links">
+      <a href="/" class="">Dashboard</a>
+      <a href="/tracking.html" class="active">Tracking</a>
+      <button class="btn btn-primary" onclick="openGenerateModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Generate Shipment
+      </button>
+    </nav>
+  </header>
+
+  <!-- Search -->
+  <section class="search-section">
+    <div class="search-box">
+      <div class="search-input-wrapper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="search-input" id="trackingInput" placeholder="Enter tracking number (e.g., FX1234567890)" maxlength="12">
+      </div>
+      <button class="btn btn-primary" onclick="trackShipment()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Track
+      </button>
+      <button class="btn btn-secondary" onclick="openBulkModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Bulk Generate
+      </button>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-card blue">
+      <div class="stat-value" id="totalShipments">0</div>
+      <div class="stat-label">Total Shipments</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-value" id="activeShipments">0</div>
+      <div class="stat-label">Active</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-value" id="inTransit">0</div>
+      <div class="stat-label">In Transit</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-value" id="delivered">0</div>
+      <div class="stat-label">Delivered</div>
+    </div>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="main-layout">
+    <!-- Map -->
+    <div class="map-container">
+      <div class="map-header">
+        <h3>Shipment Map</h3>
+        <div class="map-legend">
+          <div class="legend-item">
+            <div class="legend-dot" style="background: var(--success);"></div>
+            Origin
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background: var(--accent);"></div>
+            In Transit
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background: var(--danger);"></div>
+            Destination
+          </div>
+        </div>
+      </div>
+      <div id="map"></div>
+    </div>
+
+    <!-- Tracking Panel -->
+    <div class="tracking-panel">
+      <!-- Shipment Details -->
+      <div class="panel-card" id="shipmentDetails">
+        <div class="panel-header">
+          <h3>Shipment Details</h3>
+          <span class="badge badge-it" id="statusBadge" style="display:none;"></span>
+        </div>
+        <div class="panel-body" id="shipmentInfo">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            <h3>No shipment selected</h3>
+            <p>Enter a tracking number or generate a new shipment</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Route Timeline -->
+      <div class="panel-card" id="routeCard" style="display:none;">
+        <div class="panel-header">
+          <h3>Route Timeline</h3>
+        </div>
+        <div class="panel-body">
+          <div class="route-steps" id="routeSteps"></div>
+        </div>
+      </div>
+
+      <!-- Active Shipments -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <h3>Active Shipments</h3>
+          <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="refreshShipments()">Refresh</button>
+        </div>
+        <div class="panel-body" style="padding: 0;">
+          <div class="shipment-list" id="shipmentList">
+            <div class="empty-state" style="padding: 30px;">
+              <p>No active shipments</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Generate Modal -->
+<div class="modal-overlay" id="generateModal">
+  <div class="modal">
+    <h2>Generate Shipment</h2>
+    <p>Create a new simulated shipment with tracking number</p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Origin City</label>
+        <select id="originCity">
+          <option value="">Random</option>
+          <option value="Los Angeles, CA">Los Angeles, CA</option>
+          <option value="Phoenix, AZ">Phoenix, AZ</option>
+          <option value="Dallas, TX">Dallas, TX</option>
+          <option value="Houston, TX">Houston, TX</option>
+          <option value="Atlanta, GA">Atlanta, GA</option>
+          <option value="Chicago, IL">Chicago, IL</option>
+          <option value="New York, NY">New York, NY</option>
+          <option value="Miami, FL">Miami, FL</option>
+          <option value="Seattle, WA">Seattle, WA</option>
+          <option value="Denver, CO">Denver, CO</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Destination City</label>
+        <select id="destCity">
+          <option value="">Random</option>
+          <option value="Los Angeles, CA">Los Angeles, CA</option>
+          <option value="Phoenix, AZ">Phoenix, AZ</option>
+          <option value="Dallas, TX">Dallas, TX</option>
+          <option value="Houston, TX">Houston, TX</option>
+          <option value="Atlanta, GA">Atlanta, GA</option>
+          <option value="Chicago, IL">Chicago, IL</option>
+          <option value="New York, NY">New York, NY</option>
+          <option value="Miami, FL">Miami, FL</option>
+          <option value="Seattle, WA">Seattle, WA</option>
+          <option value="Denver, CO">Denver, CO</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Number of Stops</label>
+        <input type="number" id="numStops" min="1" max="6" value="2">
+      </div>
+      <div class="form-group">
+        <label>Starting Progress %</label>
+        <input type="number" id="startProgress" min="0" max="100" value="30">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeGenerateModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="generateShipment()">Generate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Generate Modal -->
+<div class="modal-overlay" id="bulkModal">
+  <div class="modal">
+    <h2>Bulk Generate Shipments</h2>
+    <p>Create multiple shipments at once for testing</p>
+    <div class="form-group">
+      <label>Number of Shipments</label>
+      <input type="number" id="bulkCount" min="1" max="50" value="5">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeBulkModal()">Cancel</button>
+      <button class="btn btn-success" onclick="bulkGenerate()">Generate All</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="/tracking.js"></script>
+</body>
+</html>

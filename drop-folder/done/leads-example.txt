@@ -1,0 +1,27 @@
+Sender_name: timi
+Receiver_name: Joy
+Receiver_email: moonbeth19@gmail.com
+Sender_name: Peter T. Joy
+Sender_from_name: Peter Joy
+Position: Chairman
+=====================
+Sender_name: femi
+Receiver_name: Sarah
+Receiver_email: sarah@company.com
+Sender_name: Michael A. Benson
+Sender_from_name: Michael Benson
+Position: Managing Director
+=====================
+Sender_name: akin
+Receiver_name: David
+Receiver_email: david@techcorp.io
+Sender_name: Adewale O. Johnson
+Sender_from_name: Adewale Johnson
+Position: CEO
+=====================
+Sender_name: bola
+Receiver_name: Grace
+Receiver_email: grace@startup.co
+Sender_name: Oluwaseun A. Martins
+Sender_from_name: Oluwaseun Martins
+Position: Head of Business Development

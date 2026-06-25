@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Bot Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+  h1 { font-size: 24px; margin-bottom: 24px; color: #38bdf8; }
+  h2 { font-size: 18px; margin-bottom: 16px; color: #94a3b8; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+  .card h3 { font-size: 14px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card .value { font-size: 36px; font-weight: 700; color: #e2e8f0; }
+  .card .sub { font-size: 13px; color: #64748b; margin-top: 4px; }
+  .progress-bar { height: 8px; background: #334155; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+  .progress-bar .fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+  .fill.green { background: #22c55e; }
+  .fill.blue { background: #38bdf8; }
+  .fill.yellow { background: #eab308; }
+  .fill.red { background: #ef4444; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; border-bottom: 1px solid #334155; color: #64748b; font-weight: 600; }
+  td { padding: 8px 12px; border-bottom: 1px solid #1e293b; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge.sent { background: #052e16; color: #22c55e; }
+  .badge.failed { background: #450a0a; color: #ef4444; }
+  .badge.queued { background: #1c1917; color: #eab308; }
+  .badge.paused-true { background: #450a0a; color: #f97316; }
+  .badge.paused-false { background: #052e16; color: #22c55e; }
+  .btn { padding: 8px 20px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; }
+  .btn.pause { background: #f97316; color: #fff; }
+  .btn.resume { background: #22c55e; color: #fff; }
+  .btn:hover { opacity: 0.9; }
+  .account-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #1e293b; }
+  .account-row:last-child { border-bottom: none; }
+  .account-name { font-weight: 600; }
+  .account-host { font-size: 12px; color: #64748b; }
+  .flex { display: flex; gap: 12px; align-items: center; }
+  .mb-24 { margin-bottom: 24px; }
+  .mt-16 { margin-top: 16px; }
+  .text-center { text-align: center; }
+  .empty { color: #64748b; text-align: center; padding: 40px; }
+  #pauseBtn { margin-bottom: 16px; }
+</style>
+</head>
+<body>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h1>Email Bot Dashboard</h1>
+    <a href="/tracking.html" style="color: #38bdf8; text-decoration: none; font-weight: 600; font-size: 14px;">Freight Tracker Pro →</a>
+  </div>
+
+  <div class="mb-24">
+    <button id="pauseBtn" class="btn pause">⏸ Pause All</button>
+  </div>
+
+  <div class="grid" id="summaryGrid">
+    <div class="card">
+      <h3>Sent Today</h3>
+      <div class="value" id="sentToday">0</div>
+      <div class="sub" id="sentSub">across all accounts</div>
+      <div class="progress-bar"><div class="fill green" id="totalProgress" style="width:0%"></div></div>
+    </div>
+    <div class="card">
+      <h3>Failed</h3>
+      <div class="value" id="failedCount">0</div>
+    </div>
+    <div class="card">
+      <h3>Pending Queue</h3>
+      <div class="value" id="pendingCount">0</div>
+      <div class="sub">leads waiting for capacity</div>
+    </div>
+    <div class="card">
+      <h3>Files Processed</h3>
+      <div class="value" id="filesProcessed">0</div>
+      <div class="sub">CSV / TXT files completed</div>
+    </div>
+  </div>
+
+  <h2>SMTP Accounts</h2>
+  <div class="card" id="accountsSection">
+    <div id="accountsList">Loading...</div>
+  </div>
+
+  <h2 class="mt-16">Recent Sends</h2>
+  <div class="card" id="historySection">
+    <div id="historyTable"><p class="empty">No sends yet</p></div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
